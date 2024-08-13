@@ -2,7 +2,6 @@
 
 ### What is k9-nss ###
 
-
 This is source code for a shared library that allows *nix (Linux, FreeBSD, etc) to 
 "lookup" usernames and group information via the K9 API.  To use it,  do this:
 
