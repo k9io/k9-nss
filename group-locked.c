@@ -408,7 +408,12 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
     for (a = 0; a < cc; a++)
         {
             result->gr_mem[a] = malloc( MAX_GROUP_NAME * sizeof(char *) );
+	    memset( result->gr_mem[a], 0, MAX_GROUP_NAME * sizeof(char *) );
         }
+
+    /* Set to null incase no members are returned */
+
+    result->gr_mem[0] = NULL; 
 
     /* Stuff "members" into an array */
 
