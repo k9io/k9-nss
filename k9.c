@@ -44,6 +44,7 @@ extern char QUERY_PASSWD_USERNAME_URL[DEFAULT_SIZE];
 extern char QUERY_PASSWD_UID_URL[DEFAULT_SIZE];
 extern char QUERY_PASSWD_ID_URL[DEFAULT_SIZE];
 
+extern char CONNECTION_TIMEOUT[CONNECTION_TIMEOUT_SIZE];
 
 /****************************************************************************
  * write_callback_func() - Callback for data received via libcurl
@@ -82,6 +83,7 @@ char *Query_K9( const char *url )
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback_func);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);    /* Will send SIGALRM if not set */
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, atol(CONNECTION_TIMEOUT) );
 
     headers = curl_slist_append (headers, USER_AGENT);
     headers = curl_slist_append (headers, tmp_api);

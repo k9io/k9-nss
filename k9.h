@@ -33,6 +33,8 @@
 #define		MAX_GECOS_SIZE		256
 #define		MAX_SHELL_SIZE		64
 
+#define		CONNECTION_TIMEOUT_SIZE	6
+
 
 //#ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t siz);

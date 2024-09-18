@@ -23,7 +23,6 @@
 #include <string.h>
 #include <yaml.h>
 
-
 #include <nss.h>
 #include <grp.h>
 #include <pwd.h>
@@ -42,6 +41,8 @@ char QUERY_GROUP_ID_URL[DEFAULT_SIZE] = { 0 };
 char QUERY_PASSWD_USERNAME_URL[DEFAULT_SIZE] = { 0 };
 char QUERY_PASSWD_UID_URL[DEFAULT_SIZE] = { 0 };
 char QUERY_PASSWD_ID_URL[DEFAULT_SIZE] = { 0 };
+
+char CONNECTION_TIMEOUT[CONNECTION_TIMEOUT_SIZE] = { 0 };
 
 void Load_Config()
 {
@@ -141,6 +142,11 @@ void Load_Config()
                             else if ( !strcmp(key, "query_passwd_id" ))
                                 {
                                     strlcpy(QUERY_PASSWD_ID_URL, value, DEFAULT_SIZE );
+                                }
+
+                            else if ( !strcmp(key, "connection_timeout" ))
+                                {
+                                    strlcpy(CONNECTION_TIMEOUT, value, CONNECTION_TIMEOUT_SIZE);
                                 }
 
                         }

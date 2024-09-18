@@ -344,8 +344,8 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     char *response = NULL;
 
     char tmp_username[MAX_USERNAME_SIZE] = { 0 };
-    char tmp_home_dir[MAX_HOME_DIR_SIZE] = { 0 }; 
-    char tmp_gecos[MAX_GECOS_SIZE] = { 0 }; 
+    char tmp_home_dir[MAX_HOME_DIR_SIZE] = { 0 };
+    char tmp_gecos[MAX_GECOS_SIZE] = { 0 };
     char tmp_shell[MAX_SHELL_SIZE] = { 0 };
 
     int j_uid = -1;                     /* DEBUG : Dont want to accidently give up root */
@@ -404,7 +404,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
         }
 
     strlcpy(tmp_username, json_object_get_string(string_obj), MAX_USERNAME_SIZE);
-    
+
     /* uid */
 
     json_object_object_get_ex(json_in, "uid", &string_obj);
