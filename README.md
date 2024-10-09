@@ -26,13 +26,13 @@ Building and installing the Key9 NSS
 Building k9-nss requires a C compiler and the following external libraries. 
 
    * libcurl ( https://curl.se/libcurl/ ) 
-	* apt-get install libcurl4-openssl-dev
+	- apt-get install libcurl4-openssl-dev
 
    * libyaml ( https://github.com/yaml/libyaml )
-	* apt-get install libyaml-dev
+	- apt-get install libyaml-dev
 
    * libjson-c ( https://github.com/json-c/json-c )
-	* apt-get install libjson-c-dev
+	- apt-get install libjson-c-dev
 
    * libpthread
 
