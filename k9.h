@@ -32,8 +32,11 @@
 #define		MAX_HOME_DIR_SIZE	256
 #define		MAX_GECOS_SIZE		256
 #define		MAX_SHELL_SIZE		64
+#define 	MAX_PASSWD_SIZE		256
 
 #define		CONNECTION_TIMEOUT_SIZE	6
+
+#define		DEBUG_PASSWD		0
 
 
 //#ifndef HAVE_STRLCPY
