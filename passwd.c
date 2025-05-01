@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Key9 Identity, Inc <k9.io>
- * Copyright (C) 2024 Champ Clark III <cclark@k9.io>
+ * Copyright (C) 2024-2025 Key9 Identity, Inc <k9.io>
+ * Copyright (C) 2024-2025 Champ Clark III <cclark@k9.io>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License Version 2 as
