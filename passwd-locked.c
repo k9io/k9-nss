@@ -97,8 +97,9 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char *) );
-    memset(result->pw_name, 0, MAX_USERNAME_SIZE);
+    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char) );
+    memset(result->pw_name, 0, MAX_USERNAME_SIZE * sizeof(char));
+
     strlcpy( result->pw_name, json_object_get_string(string_obj), MAX_USERNAME_SIZE);
 
     /* uid */
@@ -141,8 +142,9 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char *) );
-    memset(result->pw_shell, 0, MAX_SHELL_SIZE);
+    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char) );
+    memset(result->pw_shell, 0, MAX_SHELL_SIZE * sizeof(char) ); 
+
     strlcpy( result->pw_shell, json_object_get_string(string_obj), MAX_SHELL_SIZE);
 
     /* home dir */
@@ -157,8 +159,9 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char *) );
-    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE);
+    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char) );
+    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE * sizeof(char) );
+ 
     strlcpy( result->pw_dir, json_object_get_string(string_obj), MAX_HOME_DIR_SIZE);
 
     /* gecos */
@@ -173,14 +176,16 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char *) );
-    memset(result->pw_gecos, 0, MAX_GECOS_SIZE);
+    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char) );
+    memset(result->pw_gecos, 0, MAX_GECOS_SIZE * sizeof(char) );
+
     strlcpy( result->pw_gecos, json_object_get_string(string_obj), MAX_GECOS_SIZE);
 
     /* legacy passwd placeholder */
 
     result->pw_passwd = malloc( 2 * sizeof(char *) );
-    memset(result->pw_gecos, 0, 2);
+    memset(result->pw_passwd, 0, 2);
+
     strlcpy( result->pw_passwd, "x", 2);
 
     result->pw_uid = j_uid;
@@ -257,8 +262,9 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char *) );
-    memset(result->pw_name, 0, MAX_USERNAME_SIZE);
+    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char) );
+    memset(result->pw_name, 0, MAX_USERNAME_SIZE * sizeof(char) );
+
     strlcpy( result->pw_name, json_object_get_string(string_obj), MAX_USERNAME_SIZE);
 
     /* uid */
@@ -301,8 +307,9 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char *) );
-    memset(result->pw_shell, 0, MAX_SHELL_SIZE);
+    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char) );
+    memset(result->pw_shell, 0, MAX_SHELL_SIZE * sizeof(char) );
+
     strlcpy( result->pw_shell, json_object_get_string(string_obj), MAX_SHELL_SIZE);
 
     /* home dir */
@@ -317,8 +324,9 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char *) );
-    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE);
+    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char) );
+    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE * sizeof(char) );
+
     strlcpy( result->pw_dir, json_object_get_string(string_obj), MAX_HOME_DIR_SIZE);
 
     /* gecos */
@@ -333,14 +341,16 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char *) );
-    memset(result->pw_gecos, 0, MAX_GECOS_SIZE);
+    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char) );
+    memset(result->pw_gecos, 0, MAX_GECOS_SIZE * sizeof(char) );
+
     strlcpy( result->pw_gecos, json_object_get_string(string_obj), MAX_GECOS_SIZE);
 
     /* legacy passwd placeholder */
 
     result->pw_passwd = malloc( 2 * sizeof(char *) );
-    memset(result->pw_gecos, 0, 2);
+    memset(result->pw_passwd, 0, 2);
+
     strlcpy( result->pw_passwd, "x", 2);
 
     result->pw_uid = j_uid;
@@ -418,8 +428,9 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char *) );
-    memset(result->pw_name, 0, MAX_USERNAME_SIZE);
+    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char) );
+    memset(result->pw_name, 0, MAX_USERNAME_SIZE * sizeof(char) );
+
     strlcpy( result->pw_name, json_object_get_string(string_obj), MAX_USERNAME_SIZE);
 
     /* uid */
@@ -462,8 +473,9 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char *) );
-    memset(result->pw_shell, 0, MAX_SHELL_SIZE);
+    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char) );
+    memset(result->pw_shell, 0, MAX_SHELL_SIZE * sizeof(char) );
+
     strlcpy( result->pw_shell, json_object_get_string(string_obj), MAX_SHELL_SIZE);
 
     /* home dir */
@@ -478,8 +490,9 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char *) );
-    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE);
+    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char) );
+    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE * sizeof(char) );
+
     strlcpy( result->pw_dir, json_object_get_string(string_obj), MAX_HOME_DIR_SIZE);
 
     /* gecos */
@@ -494,14 +507,16 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char *) );
-    memset(result->pw_gecos, 0, MAX_GECOS_SIZE);
+    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char) );
+    memset(result->pw_gecos, 0, MAX_GECOS_SIZE * sizeof(char) );
+
     strlcpy( result->pw_gecos, json_object_get_string(string_obj), MAX_GECOS_SIZE);
 
     /* legacy passwd placeholder */
 
     result->pw_passwd = malloc( 2 * sizeof(char *) );
-    memset(result->pw_gecos, 0, 2);
+    memset(result->pw_passwd, 0, 2);
+
     strlcpy( result->pw_passwd, "x", 2);
 
     result->pw_uid = j_uid;

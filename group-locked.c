@@ -104,7 +104,9 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->gr_name = malloc( MAX_GROUP_SIZE * sizeof(char *) );
+    result->gr_name = malloc( MAX_GROUP_SIZE * sizeof(char) );
+    memset(result->gr_name, 0, MAX_GROUP_SIZE * sizeof(char) );
+
     strlcpy( result->gr_name, json_object_get_string(string_obj), MAX_GROUP_SIZE);
 
     /* group */
@@ -227,7 +229,9 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->gr_name = malloc( MAX_GROUP_SIZE * sizeof(char *) );
+    result->gr_name = malloc( MAX_GROUP_SIZE * sizeof(char) );
+    memset(result->gr_name, 0, MAX_GROUP_SIZE * sizeof(char) );
+
     strlcpy( result->gr_name, json_object_get_string(string_obj), MAX_GROUP_SIZE );
 
     /* gid */
@@ -355,7 +359,9 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->gr_name = malloc( MAX_GROUP_SIZE * sizeof(char *) );
+    result->gr_name = malloc( MAX_GROUP_SIZE * sizeof(char) );
+    memset(result->gr_name, 0, MAX_GROUP_SIZE * sizeof(char) );
+
     strlcpy( result->gr_name, json_object_get_string(string_obj), MAX_GROUP_SIZE );
 
     /* gid */
@@ -403,12 +409,14 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
 
     /* Allocate memory for gr_mem */
 
-    result->gr_mem = malloc( ( MAX_GROUP_NAME * cc ) * sizeof(char* ) );
+    result->gr_mem = malloc( ( MAX_GROUP_NAME * cc ) );
+    memset(result->gr_mem, 0, ( MAX_GROUP_NAME * cc ));
+
 
     for (a = 0; a < cc; a++)
         {
-            result->gr_mem[a] = malloc( MAX_GROUP_NAME * sizeof(char *) );
-            memset( result->gr_mem[a], 0, MAX_GROUP_NAME * sizeof(char *) );
+            result->gr_mem[a] = malloc( MAX_GROUP_NAME * sizeof(char ) );
+            memset( result->gr_mem[a], 0, MAX_GROUP_NAME * sizeof(char ) );
         }
 
     /* Set to null incase no members are returned */
