@@ -32,6 +32,8 @@
 #include <pwd.h>
 #include <shadow.h>
 
+#include <stdbool.h>
+
 #include "k9.h"
 
 extern char API_KEY[DEFAULT_SIZE];

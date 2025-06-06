@@ -28,6 +28,8 @@
 #include <pwd.h>
 #include <shadow.h>
 
+#include <stdbool.h>
+
 #include "k9.h"
 
 /* Globals */
@@ -43,6 +45,10 @@ char QUERY_PASSWD_UID_URL[DEFAULT_SIZE] = { 0 };
 char QUERY_PASSWD_ID_URL[DEFAULT_SIZE] = { 0 };
 
 char CONNECTION_TIMEOUT[CONNECTION_TIMEOUT_SIZE] = { 0 };
+
+bool GETPWENT_K9_FLAG = false;
+bool GETGRENT_K9_FLAG = false;
+
 
 void Load_Config()
 {
@@ -90,8 +96,7 @@ void Load_Config()
                     state = 1;
                     break;
 
-                /* Since our configuration YAML is basic,  we don't bother processing
-                   "blocks" */
+                /* Since our configuration YAML is basic,  we don't bother processing "blocks" */
 
                 case YAML_SCALAR_TOKEN:
 
@@ -147,6 +152,27 @@ void Load_Config()
                             else if ( !strcmp(key, "connection_timeout" ))
                                 {
                                     strlcpy(CONNECTION_TIMEOUT, value, CONNECTION_TIMEOUT_SIZE);
+                                }
+
+                            else if ( !strcmp(key, "getpwent" ))
+                                {
+
+                                    if (!strcmp(value, "true") || !strcmp(value, "enabled"))
+                                        {
+                                            GETPWENT_K9_FLAG = true;
+                                        }
+
+                                }
+
+
+                            else if ( !strcmp(key, "getgrent" ))
+                                {
+
+                                    if (!strcmp(value, "true") || !strcmp(value, "enabled"))
+                                        {
+                                            GETGRENT_K9_FLAG = true;
+                                        }
+
                                 }
 
                         }

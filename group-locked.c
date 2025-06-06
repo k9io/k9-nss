@@ -25,8 +25,8 @@
 #include <grp.h>
 #include <pwd.h>
 #include <shadow.h>
-
 #include <string.h>
+#include <stdbool.h>
 
 #include <curl/curl.h>
 #include <json-c/json.h>
@@ -37,6 +37,7 @@ extern char QUERY_GROUP_NAME_URL[DEFAULT_SIZE];
 extern char QUERY_GROUP_GID_URL[DEFAULT_SIZE];
 extern char QUERY_GROUP_ID_URL[DEFAULT_SIZE];
 
+extern bool GETGRENT_K9_FLAG;
 
 enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop)
 {
@@ -311,6 +312,13 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
     json_object *string_obj;
 
     Load_Config();
+
+    /* If 'getgrent' in the yaml is false, bypass */
+
+    if ( GETGRENT_K9_FLAG == false )
+        {
+            return NSS_STATUS_NOTFOUND;
+        }
 
     static int u = 0;
     u++;

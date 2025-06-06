@@ -37,6 +37,8 @@ extern char QUERY_PASSWD_USERNAME_URL[DEFAULT_SIZE];
 extern char QUERY_PASSWD_UID_URL[DEFAULT_SIZE];
 extern char QUERY_PASSWD_ID_URL[DEFAULT_SIZE];
 
+extern bool GETPWENT_K9_FLAG;
+
 enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
 
@@ -143,7 +145,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
         }
 
     result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char) );
-    memset(result->pw_shell, 0, MAX_SHELL_SIZE * sizeof(char) ); 
+    memset(result->pw_shell, 0, MAX_SHELL_SIZE * sizeof(char) );
 
     strlcpy( result->pw_shell, json_object_get_string(string_obj), MAX_SHELL_SIZE);
 
@@ -161,7 +163,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
 
     result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char) );
     memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE * sizeof(char) );
- 
+
     strlcpy( result->pw_dir, json_object_get_string(string_obj), MAX_HOME_DIR_SIZE);
 
     /* gecos */
@@ -380,6 +382,11 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     json_object *string_obj;
 
     Load_Config();
+
+    if ( GETPWENT_K9_FLAG == false )
+        {
+            return NSS_STATUS_NOTFOUND;
+        }
 
     static int i = 0;
     i++;
