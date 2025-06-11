@@ -47,7 +47,7 @@ char QUERY_PASSWD_ID_URL[DEFAULT_SIZE] = { 0 };
 char CONNECTION_TIMEOUT[CONNECTION_TIMEOUT_SIZE] = { 0 };
 
 bool GETPWENT_K9_FLAG = false;
-bool GETGRENT_K9_FLAG = false;
+bool GETGRENT_K9_FLAG = true;
 
 
 void Load_Config()
@@ -168,9 +168,9 @@ void Load_Config()
                             else if ( !strcmp(key, "getgrent" ))
                                 {
 
-                                    if (!strcmp(value, "true") || !strcmp(value, "enabled"))
+                                    if (!strcmp(value, "false") || !strcmp(value, "disabled"))
                                         {
-                                            GETGRENT_K9_FLAG = true;
+                                            GETGRENT_K9_FLAG = false;
                                         }
 
                                 }
