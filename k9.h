@@ -43,9 +43,13 @@
 size_t strlcpy(char *dst, const char *src, size_t siz);
 //#endif
 
+#include <stdbool.h>
+
 char *Query_K9( const char *url );
 void Log (const char *format,... );
-void Load_Config( void );
+bool Load_Config( void );
+void _nss_k9_resetpwent_index( void );
+void _nss_k9_resetgrent_index( void );
 
 /* Passwd */
 

@@ -50,11 +50,15 @@ bool GETPWENT_K9_FLAG = false;
 bool GETGRENT_K9_FLAG = true;
 
 
-void Load_Config()
+bool Load_Config()
 {
 
+    static bool loaded = false;
+
+    if ( loaded ) return true;
+
     yaml_parser_t parser;
-    yaml_token_t token;
+    yaml_token_t token = {0};
 
     int state = 0;
 
@@ -69,13 +73,14 @@ void Load_Config()
     if (fh == NULL)
         {
             Log("ERROR: Cannot open YAML file '%s'", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     if (!yaml_parser_initialize(&parser))
         {
             Log("ERROR: Failed to initialize yaml parser!");
-            exit(-1);
+            fclose(fh);
+            return false;
         }
 
     yaml_parser_set_input_file(&parser, fh);
@@ -194,54 +199,58 @@ void Load_Config()
     if ( company_uuid[0] == '\0' )
         {
             Log("ERROR: Cannot find 'company_uuid' in %s.", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     if ( api_key[0] == '\0' )
         {
             Log("ERROR: Cannot find 'api_key' in %s.", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     if ( QUERY_GROUP_NAME_URL[0] == '\0' )
         {
             Log("ERROR: Cannot find 'query_group_name' in %s.", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     if ( QUERY_GROUP_GID_URL[0] == '\0' )
         {
             Log("ERROR: Cannot find 'query_group_gid' in %s.", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     if ( QUERY_GROUP_ID_URL[0] == '\0' )
         {
             Log("ERROR: Cannot find 'query_group_id' in %s.", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     if ( QUERY_PASSWD_USERNAME_URL[0] == '\0' )
         {
             Log("ERROR: Cannot find 'query_passwd_username' in %s.", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     if ( QUERY_PASSWD_UID_URL[0] == '\0' )
         {
             Log("ERROR: Cannot find 'query_passwd_uid' in %s.", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     if ( QUERY_PASSWD_ID_URL[0] == '\0' )
         {
             Log("ERROR: Cannot find 'query_passwd_id' in %s.", CONFIG_FILE);
-            exit(-1);
+            return false;
         }
 
     /* Make full, usable API key */
 
     snprintf(API_KEY, sizeof(API_KEY), "%s:%s", company_uuid, api_key);
     API_KEY[ sizeof(API_KEY) - 1 ] = '\0';
+
+    loaded = true;
+
+    return true;
 
 }

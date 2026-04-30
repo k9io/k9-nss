@@ -48,6 +48,22 @@ extern char QUERY_PASSWD_ID_URL[DEFAULT_SIZE];
 
 extern char CONNECTION_TIMEOUT[CONNECTION_TIMEOUT_SIZE];
 
+static CURL *curl_handle = NULL;
+
+__attribute__((constructor))
+static void k9_init(void)
+{
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl_handle = curl_easy_init();
+}
+
+__attribute__((destructor))
+static void k9_fini(void)
+{
+    curl_easy_cleanup(curl_handle);
+    curl_global_cleanup();
+}
+
 /****************************************************************************
  * write_callback_func() - Callback for data received via libcurl
  ****************************************************************************/
@@ -56,6 +72,7 @@ size_t static write_callback_func(void *buffer, size_t size, size_t nmemb, void 
 {
     char **response_ptr =  (char**)userp;
     *response_ptr = strndup(buffer, (size_t)(size *nmemb));     /* Return the string */
+    return size * nmemb;
 }
 
 
@@ -64,38 +81,35 @@ char *Query_K9( const char *url )
 
     char tmp_api[512] = { 0 };
 
-    CURL *curl;
     CURLcode res;
 
     struct curl_slist *headers = NULL;
-    char *response=NULL;
+    char *response = NULL;
+
+    if ( !curl_handle )
+        {
+            Log("Error: curl handle not initialized");
+            return NULL;
+        }
 
     snprintf(tmp_api, sizeof(tmp_api), "API_KEY: %s", API_KEY);
     tmp_api[ sizeof(tmp_api) - 1 ] = '\0';
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    curl = curl_easy_init();
 
-    if(!curl)
-        {
-            Log("Error using curl_easy_init()");
-            exit(-1);
-        }
+    curl_easy_reset(curl_handle);
 
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback_func);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);    /* Will send SIGALRM if not set */
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, atol(CONNECTION_TIMEOUT) );
+    curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback_func);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);    /* Will send SIGALRM if not set */
+    curl_easy_setopt(curl_handle, CURLOPT_CONNECTTIMEOUT, atol(CONNECTION_TIMEOUT) );
 
-    headers = curl_slist_append (headers, USER_AGENT);
-    headers = curl_slist_append (headers, tmp_api);
+    headers = curl_slist_append(headers, USER_AGENT);
+    headers = curl_slist_append(headers, tmp_api);
 
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers );
-    res = curl_easy_perform(curl);
+    curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
+    res = curl_easy_perform(curl_handle);
 
-    curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
-    curl_global_cleanup();
 
     return( response );
 

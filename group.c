@@ -81,11 +81,12 @@ enum nss_status _nss_k9_getgrent_r(struct group *result, char *buffer, size_t bu
 }
 
 
-/* Don't need locks */
-
 enum nss_status _nss_k9_setgrent (void)
 {
-    return NSS_STATUS_SUCCESS ;
+    pthread_mutex_lock(&GETGRENT_R_MUTEX);
+    _nss_k9_resetgrent_index();
+    pthread_mutex_unlock(&GETGRENT_R_MUTEX);
+    return NSS_STATUS_SUCCESS;
 }
 
 enum nss_status _nss_k9_endgrent (void)

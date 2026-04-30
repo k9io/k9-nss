@@ -22,6 +22,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <string.h>
+#include <errno.h>
 
 #include <nss.h>
 #include <pwd.h>
@@ -39,22 +40,79 @@ extern char QUERY_PASSWD_ID_URL[DEFAULT_SIZE];
 
 extern bool GETPWENT_K9_FLAG;
 
+static int pwent_index = 0;
+
+void _nss_k9_resetpwent_index(void)
+{
+    pwent_index = 0;
+}
+
+/* Parse a numeric id field; rejects non-numeric, negative, or out-of-range values. */
+#define PARSE_ID(dest, str)                                         \
+    do {                                                            \
+        const char *_s = (str);                                     \
+        char *_end;                                                 \
+        errno = 0;                                                  \
+        long _v = strtol(_s, &_end, 10);                           \
+        if ( errno != 0 || _end == _s || *_end != '\0'             \
+             || _v < 0 || _v > (long)UINT32_MAX )                  \
+            {                                                       \
+                json_object_put(json_in);                          \
+                Log("Invalid id value in JSON: '%s'", _s);         \
+                return NSS_STATUS_UNAVAIL;                          \
+            }                                                       \
+        (dest) = (int)_v;                                          \
+    } while (0)
+
+/* Store a string from json into the NSS-provided buffer, advance p/remaining. */
+#define BUF_STORE(field, val)                                       \
+    do {                                                            \
+        const char *_v = (val);                                     \
+        size_t _len = strlen(_v) + 1;                              \
+        if ( _len > remaining )                                     \
+            {                                                       \
+                json_object_put(json_in);                          \
+                *errnop = ERANGE;                                   \
+                return NSS_STATUS_TRYAGAIN;                         \
+            }                                                       \
+        strlcpy(p, _v, remaining);                                 \
+        (field) = p;                                               \
+        p += _len;                                                 \
+        remaining -= _len;                                         \
+    } while (0)
+
 enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
 
     char lookup_url[8192] = { 0 };
     char *response = NULL;
 
-    int j_uid = -1; 			/* DEBUG : Dont want to accidently give up root */
-    int j_gid = -1; 			/* DEBUG : Dont want to accidently give up root */
+    int j_uid = -1;
+    int j_gid = -1;
 
     struct json_object *json_in = NULL;
     json_object *string_obj;
 
-    Load_Config();
+    char *p = buffer;
+    size_t remaining = buflen;
 
-    snprintf(lookup_url, sizeof(lookup_url), "%s/%s", QUERY_PASSWD_USERNAME_URL, name);
+    if ( !Load_Config() )
+        {
+            *errnop = EAGAIN;
+            return NSS_STATUS_UNAVAIL;
+        }
+
+    char *escaped_name = curl_easy_escape(NULL, name, 0);
+
+    if ( escaped_name == NULL )
+        {
+            *errnop = EAGAIN;
+            return NSS_STATUS_UNAVAIL;
+        }
+
+    snprintf(lookup_url, sizeof(lookup_url), "%s/%s", QUERY_PASSWD_USERNAME_URL, escaped_name);
     lookup_url[ sizeof(lookup_url) - 1 ] = '\0';
+    curl_free(escaped_name);
 
     response = Query_K9( lookup_url );
 
@@ -64,19 +122,14 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
             return NSS_STATUS_NOTFOUND;
         }
 
-    /* Parse incoming JSON */
-
     json_in = json_tokener_parse(response);
+    free(response);
 
     if ( json_in == NULL )
         {
-            json_object_put(json_in);
-
             Log("ERROR: Cannot parse JSON from API: '%s'", response);
             return NSS_STATUS_UNAVAIL;
         }
-
-    /* Look for a key named "error".  There is a problem upstream if we get JSON with an "error" */
 
     json_object_object_get_ex(json_in, "error", &string_obj);
 
@@ -94,15 +147,11 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate username in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char) );
-    memset(result->pw_name, 0, MAX_USERNAME_SIZE * sizeof(char));
-
-    strlcpy( result->pw_name, json_object_get_string(string_obj), MAX_USERNAME_SIZE);
+    BUF_STORE(result->pw_name, json_object_get_string(string_obj));
 
     /* uid */
 
@@ -111,12 +160,11 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate uid in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    j_uid = atoi(json_object_get_string(string_obj));
+    PARSE_ID(j_uid, json_object_get_string(string_obj));
 
     /* gid */
 
@@ -125,12 +173,11 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    j_gid = atoi(json_object_get_string(string_obj));
+    PARSE_ID(j_gid, json_object_get_string(string_obj));
 
     /* shell */
 
@@ -139,15 +186,11 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate shell in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char) );
-    memset(result->pw_shell, 0, MAX_SHELL_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_shell, json_object_get_string(string_obj), MAX_SHELL_SIZE);
+    BUF_STORE(result->pw_shell, json_object_get_string(string_obj));
 
     /* home dir */
 
@@ -156,15 +199,11 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate home_dir in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char) );
-    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_dir, json_object_get_string(string_obj), MAX_HOME_DIR_SIZE);
+    BUF_STORE(result->pw_dir, json_object_get_string(string_obj));
 
     /* gecos */
 
@@ -173,22 +212,15 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate gecos in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char) );
-    memset(result->pw_gecos, 0, MAX_GECOS_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_gecos, json_object_get_string(string_obj), MAX_GECOS_SIZE);
+    BUF_STORE(result->pw_gecos, json_object_get_string(string_obj));
 
     /* legacy passwd placeholder */
 
-    result->pw_passwd = malloc( 2 * sizeof(char *) );
-    memset(result->pw_passwd, 0, 2);
-
-    strlcpy( result->pw_passwd, "x", 2);
+    BUF_STORE(result->pw_passwd, "x");
 
     result->pw_uid = j_uid;
     result->pw_gid = j_gid;
@@ -200,7 +232,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
             printf("(_nss_k9_getpwnam_r_locked) RETURN: |%s:%s:%d:%d:%s:%s:%s|\n", result->pw_name, result->pw_passwd, result->pw_uid, result->pw_gid, result->pw_gecos, result->pw_dir, result->pw_shell);
         }
 
-    return NSS_STATUS_SUCCESS ;
+    return NSS_STATUS_SUCCESS;
 
 }
 
@@ -211,16 +243,22 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     char lookup_url[8192] = { 0 };
     char *response = NULL;
 
-    int j_uid = -1; 			/* DEBUG : Dont want to accidently give up root */
-    int j_gid = -1; 			/* DEBUG : Dont want to accidently give up root */
+    int j_uid = -1;
+    int j_gid = -1;
 
     struct json_object *json_in = NULL;
     json_object *string_obj;
 
-    Load_Config();
+    char *p = buffer;
+    size_t remaining = buflen;
 
-    snprintf(lookup_url, sizeof(lookup_url), "%s/%d",QUERY_PASSWD_UID_URL, uid);
+    if ( !Load_Config() )
+        {
+            *errnop = EAGAIN;
+            return NSS_STATUS_UNAVAIL;
+        }
 
+    snprintf(lookup_url, sizeof(lookup_url), "%s/%d", QUERY_PASSWD_UID_URL, uid);
     lookup_url[ sizeof(lookup_url) - 1 ] = '\0';
 
     response = Query_K9( lookup_url );
@@ -231,17 +269,14 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
             return NSS_STATUS_NOTFOUND;
         }
 
-    /* Parse incoming JSON */
-
     json_in = json_tokener_parse(response);
+    free(response);
 
     if ( json_in == NULL )
         {
             Log("ERROR: Cannot parse JSON from API: '%s'", response);
             return NSS_STATUS_UNAVAIL;
         }
-
-    /* Look for a key named "error".  There is a problem upstream if we get JSON with an "error" */
 
     json_object_object_get_ex(json_in, "error", &string_obj);
 
@@ -259,15 +294,11 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate username in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char) );
-    memset(result->pw_name, 0, MAX_USERNAME_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_name, json_object_get_string(string_obj), MAX_USERNAME_SIZE);
+    BUF_STORE(result->pw_name, json_object_get_string(string_obj));
 
     /* uid */
 
@@ -276,12 +307,11 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate uid in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    j_uid = atoi(json_object_get_string(string_obj));
+    PARSE_ID(j_uid, json_object_get_string(string_obj));
 
     /* gid */
 
@@ -290,12 +320,11 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    j_gid = atoi(json_object_get_string(string_obj));
+    PARSE_ID(j_gid, json_object_get_string(string_obj));
 
     /* shell */
 
@@ -304,15 +333,11 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate shell in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char) );
-    memset(result->pw_shell, 0, MAX_SHELL_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_shell, json_object_get_string(string_obj), MAX_SHELL_SIZE);
+    BUF_STORE(result->pw_shell, json_object_get_string(string_obj));
 
     /* home dir */
 
@@ -321,15 +346,11 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate home_dir in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char) );
-    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_dir, json_object_get_string(string_obj), MAX_HOME_DIR_SIZE);
+    BUF_STORE(result->pw_dir, json_object_get_string(string_obj));
 
     /* gecos */
 
@@ -338,22 +359,15 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate gecos in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char) );
-    memset(result->pw_gecos, 0, MAX_GECOS_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_gecos, json_object_get_string(string_obj), MAX_GECOS_SIZE);
+    BUF_STORE(result->pw_gecos, json_object_get_string(string_obj));
 
     /* legacy passwd placeholder */
 
-    result->pw_passwd = malloc( 2 * sizeof(char *) );
-    memset(result->pw_passwd, 0, 2);
-
-    strlcpy( result->pw_passwd, "x", 2);
+    BUF_STORE(result->pw_passwd, "x");
 
     result->pw_uid = j_uid;
     result->pw_gid = j_gid;
@@ -365,7 +379,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
             printf("(_nss_k9_getpwuid_r_locked) RETURN: |%s:%s:%d:%d:%s:%s:%s|\n", result->pw_name, result->pw_passwd, result->pw_uid, result->pw_gid, result->pw_gecos, result->pw_dir, result->pw_shell);
         }
 
-    return NSS_STATUS_SUCCESS ;
+    return NSS_STATUS_SUCCESS;
 
 }
 
@@ -375,44 +389,47 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     char lookup_url[8192] = { 0 };
     char *response = NULL;
 
-    int j_uid = -1;                     /* DEBUG : Dont want to accidently give up root */
-    int j_gid = -1;                     /* DEBUG : Dont want to accidently give up root */
+    int j_uid = -1;
+    int j_gid = -1;
 
     struct json_object *json_in = NULL;
     json_object *string_obj;
 
-    Load_Config();
+    char *p = buffer;
+    size_t remaining = buflen;
+
+    if ( !Load_Config() )
+        {
+            *errnop = EAGAIN;
+            return NSS_STATUS_UNAVAIL;
+        }
 
     if ( GETPWENT_K9_FLAG == false )
         {
             return NSS_STATUS_NOTFOUND;
         }
 
-    static int i = 0;
-    i++;
+    pwent_index++;
 
-    snprintf(lookup_url, sizeof(lookup_url), "%s/%d", QUERY_PASSWD_ID_URL, i);
+    snprintf(lookup_url, sizeof(lookup_url), "%s/%d", QUERY_PASSWD_ID_URL, pwent_index);
     lookup_url[ sizeof(lookup_url) - 1 ] = '\0';
 
     response = Query_K9( lookup_url );
 
     if ( response == NULL )
         {
-            Log("ID %d not found.", i);
+            Log("ID %d not found.", pwent_index);
             return NSS_STATUS_NOTFOUND;
         }
 
-    /* Parse incoming JSON */
-
     json_in = json_tokener_parse(response);
+    free(response);
 
     if ( json_in == NULL )
         {
             Log("ERROR: Cannot parse JSON from API: '%s'", response);
             return NSS_STATUS_UNAVAIL;
         }
-
-    /* Look for a key named "error".  There is a problem upstream if we get JSON with an "error" */
 
     json_object_object_get_ex(json_in, "error", &string_obj);
 
@@ -430,15 +447,11 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate username in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_name = malloc( MAX_USERNAME_SIZE * sizeof(char) );
-    memset(result->pw_name, 0, MAX_USERNAME_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_name, json_object_get_string(string_obj), MAX_USERNAME_SIZE);
+    BUF_STORE(result->pw_name, json_object_get_string(string_obj));
 
     /* uid */
 
@@ -447,12 +460,11 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate uid in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    j_uid = atoi(json_object_get_string(string_obj));
+    PARSE_ID(j_uid, json_object_get_string(string_obj));
 
     /* gid */
 
@@ -461,12 +473,11 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    j_gid = atoi(json_object_get_string(string_obj));
+    PARSE_ID(j_gid, json_object_get_string(string_obj));
 
     /* shell */
 
@@ -475,15 +486,11 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate shell in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_shell = malloc( MAX_SHELL_SIZE * sizeof(char) );
-    memset(result->pw_shell, 0, MAX_SHELL_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_shell, json_object_get_string(string_obj), MAX_SHELL_SIZE);
+    BUF_STORE(result->pw_shell, json_object_get_string(string_obj));
 
     /* home dir */
 
@@ -492,15 +499,11 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate home_dir in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_dir = malloc( MAX_HOME_DIR_SIZE * sizeof(char) );
-    memset(result->pw_dir, 0, MAX_HOME_DIR_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_dir, json_object_get_string(string_obj), MAX_HOME_DIR_SIZE);
+    BUF_STORE(result->pw_dir, json_object_get_string(string_obj));
 
     /* gecos */
 
@@ -509,22 +512,15 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     if ( string_obj == NULL )
         {
             json_object_put(json_in);
-
             Log("Unable to locate gecos in JSON");
             return NSS_STATUS_UNAVAIL;
         }
 
-    result->pw_gecos = malloc( MAX_GECOS_SIZE * sizeof(char) );
-    memset(result->pw_gecos, 0, MAX_GECOS_SIZE * sizeof(char) );
-
-    strlcpy( result->pw_gecos, json_object_get_string(string_obj), MAX_GECOS_SIZE);
+    BUF_STORE(result->pw_gecos, json_object_get_string(string_obj));
 
     /* legacy passwd placeholder */
 
-    result->pw_passwd = malloc( 2 * sizeof(char *) );
-    memset(result->pw_passwd, 0, 2);
-
-    strlcpy( result->pw_passwd, "x", 2);
+    BUF_STORE(result->pw_passwd, "x");
 
     result->pw_uid = j_uid;
     result->pw_gid = j_gid;
@@ -536,7 +532,6 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
             printf("(_nss_k9_getpwent_r_locked) RETURN: |%s:%s:%d:%d:%s:%s:%s|\n", result->pw_name, result->pw_passwd, result->pw_uid, result->pw_gid, result->pw_gecos, result->pw_dir, result->pw_shell);
         }
 
-    return NSS_STATUS_SUCCESS ;
+    return NSS_STATUS_SUCCESS;
 
 }
-

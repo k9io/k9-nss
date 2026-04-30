@@ -79,11 +79,12 @@ enum nss_status _nss_k9_getpwent_r (struct passwd *result, char *buffer, size_t 
 }
 
 
-/* Don't need locks */
-
 enum nss_status _nss_k9_setpwent (void)
 {
-    return NSS_STATUS_SUCCESS ;
+    pthread_mutex_lock(&GETPWENT_R_MUTEX);
+    _nss_k9_resetpwent_index();
+    pthread_mutex_unlock(&GETPWENT_R_MUTEX);
+    return NSS_STATUS_SUCCESS;
 }
 
 enum nss_status _nss_k9_endpwent (void)
