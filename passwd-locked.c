@@ -123,10 +123,10 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
         }
 
     json_in = json_tokener_parse(response);
-    free(response);
 
     if ( json_in == NULL )
         {
+	    free(response);
             Log("ERROR: Cannot parse JSON from API: '%s'", response);
             return NSS_STATUS_UNAVAIL;
         }
@@ -135,6 +135,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
 
     if ( string_obj != NULL )
         {
+	    free(response);
             json_object_put(json_in);
             Log("Error for the API: %s", response);
             return NSS_STATUS_UNAVAIL;
@@ -146,6 +147,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
 
     if ( string_obj == NULL )
         {
+	    free(response);
             json_object_put(json_in);
             Log("Unable to locate username in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -159,6 +161,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate uid in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -172,6 +175,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -185,6 +189,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate shell in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -198,6 +203,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate home_dir in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -211,6 +217,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gecos in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -225,6 +232,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
     result->pw_uid = j_uid;
     result->pw_gid = j_gid;
 
+    free(response);
     json_object_put(json_in);
 
     if ( DEBUG_PASSWD == true )
@@ -270,7 +278,6 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
         }
 
     json_in = json_tokener_parse(response);
-    free(response);
 
     if ( json_in == NULL )
         {
@@ -282,6 +289,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
 
     if ( string_obj != NULL )
         {
+	    free(response);
             json_object_put(json_in);
             Log("Error for the API: %s", response);
             return NSS_STATUS_UNAVAIL;
@@ -293,6 +301,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
 
     if ( string_obj == NULL )
         {
+	    free(response);
             json_object_put(json_in);
             Log("Unable to locate username in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -306,6 +315,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate uid in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -319,6 +329,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -332,6 +343,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate shell in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -345,6 +357,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate home_dir in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -358,6 +371,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gecos in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -372,6 +386,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     result->pw_uid = j_uid;
     result->pw_gid = j_gid;
 
+    free(response);
     json_object_put(json_in);
 
     if ( DEBUG_PASSWD == true )
@@ -423,7 +438,6 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
         }
 
     json_in = json_tokener_parse(response);
-    free(response);
 
     if ( json_in == NULL )
         {
@@ -435,6 +449,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
 
     if ( string_obj != NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Error for the API: %s", response);
             return NSS_STATUS_NOTFOUND;
@@ -446,6 +461,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate username in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -459,6 +475,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate uid in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -472,6 +489,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -485,6 +503,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate shell in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -498,6 +517,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate home_dir in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -511,6 +531,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gecos in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -525,6 +546,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     result->pw_uid = j_uid;
     result->pw_gid = j_gid;
 
+    free(response);
     json_object_put(json_in);
 
     if ( DEBUG_PASSWD == true )

@@ -155,7 +155,6 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
         }
 
     json_in = json_tokener_parse(response);
-    free(response);
 
     if ( json_in == NULL )
         {
@@ -167,6 +166,7 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
 
     if ( string_obj != NULL )
         {
+	    free(response);
             json_object_put(json_in);
             Log("Error for the API: %s", response);
             return NSS_STATUS_UNAVAIL;
@@ -178,6 +178,7 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate group in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -191,6 +192,7 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -204,6 +206,7 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate members in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -233,6 +236,7 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
 
             if ( mlen > remaining )
                 {
+                    free(response);
                     json_object_put(json_in);
                     *errnop = ERANGE;
                     return NSS_STATUS_TRYAGAIN;
@@ -248,6 +252,7 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
             i++;
         }
 
+    free(response);
     json_object_put(json_in);
 
     return NSS_STATUS_SUCCESS;
@@ -293,7 +298,6 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
         }
 
     json_in = json_tokener_parse(response);
-    free(response);
 
     if ( json_in == NULL )
         {
@@ -305,6 +309,7 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
 
     if ( string_obj != NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Error for the API: %s", response);
             return NSS_STATUS_UNAVAIL;
@@ -316,6 +321,7 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate group in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -329,6 +335,7 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -342,6 +349,7 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate members in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -371,6 +379,7 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
 
             if ( mlen > remaining )
                 {
+                    free(response);
                     json_object_put(json_in);
                     *errnop = ERANGE;
                     return NSS_STATUS_TRYAGAIN;
@@ -386,6 +395,7 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
             i++;
         }
 
+    free(response);
     json_object_put(json_in);
 
     return NSS_STATUS_SUCCESS;
@@ -439,7 +449,6 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
         }
 
     json_in = json_tokener_parse(response);
-    free(response);
 
     if ( json_in == NULL )
         {
@@ -451,6 +460,7 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
 
     if ( string_obj != NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Error for the API: %s", response);
             return NSS_STATUS_UNAVAIL;
@@ -462,6 +472,7 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate group in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -475,6 +486,7 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate gid in JSON");
             return NSS_STATUS_NOTFOUND;
@@ -488,6 +500,7 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
 
     if ( string_obj == NULL )
         {
+            free(response);
             json_object_put(json_in);
             Log("Unable to locate members in JSON");
             return NSS_STATUS_UNAVAIL;
@@ -517,6 +530,7 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
 
             if ( mlen > remaining )
                 {
+                    free(response);
                     json_object_put(json_in);
                     *errnop = ERANGE;
                     return NSS_STATUS_TRYAGAIN;
@@ -532,6 +546,7 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
             i++;
         }
 
+    free(response);
     json_object_put(json_in);
 
     return NSS_STATUS_SUCCESS;
