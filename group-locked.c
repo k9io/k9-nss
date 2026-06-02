@@ -167,7 +167,7 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
     if ( string_obj != NULL )
         {
             json_object_put(json_in);
-            Log("4. Error for the API: %s", response);
+            Log("[_nss_k9_getgrnam_r_locked] Error from the API: %s", response);
 	    free(response);
             return NSS_STATUS_UNAVAIL;
         }
@@ -310,7 +310,7 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
     if ( string_obj != NULL )
         {
             json_object_put(json_in);
-            Log("5. Error for the API: %s", response);
+            Log("[_nss_k9_getgrgid_r_locked] Error from the API: %s", response);
             free(response);
             return NSS_STATUS_UNAVAIL;
         }
@@ -461,7 +461,7 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
     if ( string_obj != NULL )
         {
             json_object_put(json_in);
-            Log("6. Error for the API: %s", response);
+            Log("[_nss_k9_getgrent_r_locked] Error from the API: %s", response);
             free(response);
             return NSS_STATUS_UNAVAIL;
         }

@@ -136,7 +136,7 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
     if ( string_obj != NULL )
         {
             json_object_put(json_in);
-            Log("1. Error for the API: %s", response);
+            Log("[_nss_k9_getpwnam_r_locked] Error from the API: %s", response);
             free(response);
             return NSS_STATUS_UNAVAIL;
         }
@@ -290,7 +290,7 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
     if ( string_obj != NULL )
         {
             json_object_put(json_in);
-            Log("2. Error for the API: %s", response);
+            Log("[_nss_k9_getpwuid_r_locked] Error from the API: %s", response);
             free(response);
             return NSS_STATUS_UNAVAIL;
         }
@@ -450,7 +450,7 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
     if ( string_obj != NULL )
         {
             json_object_put(json_in);
-            Log("3. Error for the API: %s", response);
+            Log("[_nss_k9_getpwent_r_locked] Error from the API: %s", response);
             free(response);
             return NSS_STATUS_NOTFOUND;
         }
