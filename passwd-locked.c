@@ -141,6 +141,16 @@ enum nss_status _nss_k9_getpwnam_r_locked(const char *name, struct passwd *resul
             return NSS_STATUS_UNAVAIL;
         }
 
+    json_object_object_get_ex(json_in, "warning", &string_obj);
+
+    if ( string_obj != NULL )
+        {
+            json_object_put(json_in);
+            Log("[_nss_k9_getpwnam_r_locked] Warning from the API: %s", response);
+            free(response);
+            return NSS_STATUS_UNAVAIL;
+        }
+
     /* username */
 
     json_object_object_get_ex(json_in, "username", &string_obj);
@@ -295,6 +305,17 @@ enum nss_status _nss_k9_getpwuid_r_locked(uid_t uid, struct passwd *result, char
             return NSS_STATUS_UNAVAIL;
         }
 
+    json_object_object_get_ex(json_in, "warning", &string_obj);
+
+    if ( string_obj != NULL )
+        {
+            json_object_put(json_in);
+            Log("[_nss_k9_getpwuid_r_locked] Warning from the API: %s", response);
+            free(response);
+            return NSS_STATUS_UNAVAIL;
+        }
+
+ 
     /* username */
 
     json_object_object_get_ex(json_in, "username", &string_obj);
@@ -451,6 +472,16 @@ enum nss_status _nss_k9_getpwent_r_locked(struct passwd *result, char *buffer, s
         {
             json_object_put(json_in);
             Log("[_nss_k9_getpwent_r_locked] Error from the API: %s", response);
+            free(response);
+            return NSS_STATUS_NOTFOUND;
+        }
+
+    json_object_object_get_ex(json_in, "warning", &string_obj);
+
+    if ( string_obj != NULL )
+        {
+            json_object_put(json_in);
+            Log("[_nss_k9_getpwent_r_locked] Warning from the API: %s", response);
             free(response);
             return NSS_STATUS_NOTFOUND;
         }

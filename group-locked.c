@@ -172,6 +172,18 @@ enum nss_status _nss_k9_getgrnam_r_locked(const char *name, struct group *result
             return NSS_STATUS_UNAVAIL;
         }
 
+    json_object_object_get_ex(json_in, "warning", &string_obj);
+
+    if ( string_obj != NULL )
+        {
+            json_object_put(json_in);
+            Log("[_nss_k9_getgrnam_r_locked] Warning from the API: %s", response);
+	    free(response);
+            return NSS_STATUS_UNAVAIL;
+        }
+
+
+
     /* group name */
 
     json_object_object_get_ex(json_in, "group", &string_obj);
@@ -314,6 +326,17 @@ enum nss_status _nss_k9_getgrgid_r_locked(gid_t gid, struct group *result, char 
             free(response);
             return NSS_STATUS_UNAVAIL;
         }
+
+    json_object_object_get_ex(json_in, "warning", &string_obj);
+
+    if ( string_obj != NULL )
+        {
+            json_object_put(json_in);
+            Log("[_nss_k9_getgrgid_r_locked] Warning from the API: %s", response);
+            free(response);
+            return NSS_STATUS_UNAVAIL;
+        }
+
 
     /* group name */
 
@@ -466,6 +489,17 @@ enum nss_status _nss_k9_getgrent_r_locked(struct group *result, char *buffer, si
             return NSS_STATUS_UNAVAIL;
         }
 
+    json_object_object_get_ex(json_in, "warning", &string_obj);
+
+    if ( string_obj != NULL )
+        {
+            json_object_put(json_in);
+            Log("[_nss_k9_getgrent_r_locked] Warning from the API: %s", response);
+            free(response);
+            return NSS_STATUS_UNAVAIL;
+        }
+
+ 
     /* group name */
 
     json_object_object_get_ex(json_in, "group", &string_obj);
